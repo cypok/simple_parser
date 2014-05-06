@@ -12,7 +12,7 @@ F -> NUM | ( E )
 
 typedef struct _Context {
     Lexer *lex;
-    int *correct;
+    int correct;
     FILE *errors_file;
 } Context;
 
@@ -28,20 +28,20 @@ static char * token2str(Token token) {
 }
 
 static void error(Context *ctx, const char *fmt, ...) {
-	va_list arglist;
-	va_start(arglist, fmt);
+    va_list arglist;
+    va_start(arglist, fmt);
 
     fprintf(ctx->errors_file, "Error: ");
-	vfprintf(ctx->errors_file, fmt, arglist);
+    vfprintf(ctx->errors_file, fmt, arglist);
     fprintf(ctx->errors_file, "\n");
 
-	va_end(arglist);
+    va_end(arglist);
 
-    *ctx->correct = 0;
+    ctx->correct = 0;
 }
 
 static void match(Context *ctx, int exp_token) {
-    if (!*ctx->correct) return;
+    if (!ctx->correct) return;
 
     int act_token = lex_lookahead(ctx->lex);
 
@@ -77,7 +77,7 @@ static int F(Context *ctx) {
         return value;
     } else {
         match(ctx, NUM);
-        if (!*ctx->correct) return 0;
+        if (!ctx->correct) return 0;
         int value = lex_value(ctx->lex);
         lex_next(ctx->lex);
         return value;
@@ -86,16 +86,16 @@ static int F(Context *ctx) {
 
 static int T(Context *ctx) {
     int value = F(ctx);
-    if (!*ctx->correct) return 0;
+    if (!ctx->correct) return 0;
     for (;;) {
         if (lex_lookahead(ctx->lex) == MUL) {
             lex_next(ctx->lex);
             value *= F(ctx);
-            if (!*ctx->correct) return 0;
+            if (!ctx->correct) return 0;
         } else if (lex_lookahead(ctx->lex) == DIV) {
             lex_next(ctx->lex);
             value /= F(ctx);
-            if (!*ctx->correct) return 0;
+            if (!ctx->correct) return 0;
         } else {
             break;
         }
@@ -105,16 +105,16 @@ static int T(Context *ctx) {
 
 static int E(Context *ctx) {
     int value = T(ctx);
-    if (!*ctx->correct) return 0;
+    if (!ctx->correct) return 0;
     for (;;) {
         if (lex_lookahead(ctx->lex) == ADD) {
             lex_next(ctx->lex);
             value += T(ctx);
-            if (!*ctx->correct) return 0;
+            if (!ctx->correct) return 0;
         } else if (lex_lookahead(ctx->lex) == SUB) {
             lex_next(ctx->lex);
             value -= T(ctx);
-            if (!*ctx->correct) return 0;
+            if (!ctx->correct) return 0;
         } else {
             break;
         }
@@ -125,19 +125,21 @@ static int E(Context *ctx) {
 int evaluate_arithmetic_expression(const char *string, int *is_correct, FILE *errors_file) {
     Context ctx;
     ctx.errors_file = errors_file;
-    ctx.correct = is_correct;
-    *ctx.correct = 1;
+    ctx.correct = 1;
     ctx.lex = lex_init(string);
     if (ctx.lex == NULL) {
         error(&ctx, "failed to create lexer");
+        *is_correct = 0;
         return 0;
     }
 
     int value = E(&ctx);
-    if (*ctx.correct) {
+    if (ctx.correct) {
         match(&ctx, EOS);
     }
 
     lex_destroy(ctx.lex);
-    return *ctx.correct ? value : 0;
+
+    *is_correct = ctx.correct;
+    return ctx.correct ? value : 0;
 }

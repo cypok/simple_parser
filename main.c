@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     char *input;
     switch (argc) {
         case 1:
-            input = "2 + (3 * (4 + 7) - 123)";
+            input = "2 + 2 * 2 + (37 - 35)";
             break;
 
         case 2:
