@@ -27,6 +27,9 @@ void lex_destroy(Lexer *lex) {
 }
 
 Token lex_next(Lexer *lex) {
+    if (lex->token == EOS) {
+        return EOS;
+    }
     for (;;) {
         int c = *(lex->str++);
 

@@ -1,9 +1,10 @@
 #include <stdio.h>
 
 #include "lexer.h"
+#include "parser.h"
 
 void lexer_demo(char *input) {
-    printf("Tokenization of <%s>\n", input);
+    printf("Tokenization of <%s>: ", input);
 
     Lexer *lex = lex_init(input);
     Token token;
@@ -20,13 +21,24 @@ void lexer_demo(char *input) {
 
             case NUM: printf("%d ", lex_value(lex)); break;
 
-            case EOS: case NONE: break;
+            case EOS: printf("EOS "); break;
+            case NONE: break;
 
             default: printf("%c ", token); break;
         }
     } while (token != EOS);
     printf("\n");
     lex_destroy(lex);
+}
+
+void parser_demo(char *input) {
+    int correct;
+    int value = evaluate_arithmetic_expression(input, &correct, stdout);
+    if (correct) {
+        printf("Evaluated %s to %d\n", input, value);
+    } else {
+        printf("There were errors while evaluation of <%s>.\n", input);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -46,6 +58,8 @@ int main(int argc, char *argv[]) {
     }
 
     lexer_demo(input);
+
+    parser_demo(input);
 
     return 0;
 }
